@@ -1,0 +1,61 @@
+service: fastapi-app
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-2
+  memorySize: 128
+  timeout: 10
+  deploymentBucket:
+    name: btg-pactual-deploy
+  iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:*
+        Resource: "*"
+  environment:
+    ENVIRONMENT_MODE: production
+    DYNAMO_TABLE: ${env:DYNAMO_TABLE}
+    AWS_COGNITO_CLIENT_ID: ${env:AWS_COGNITO_CLIENT_ID}
+    AWS_COGNITO_CLIENT_SECRET: ${env:AWS_COGNITO_CLIENT_SECRET}
+    AWS_COGNITO_REDIRECT_URI: ${env:AWS_COGNITO_REDIRECT_URI}
+    AWS_COGNITO_DOMAIN: ${env:AWS_COGNITO_DOMAIN}
+    AWS_COGNITO_USER_POOL_ID: ${env:AWS_COGNITO_USER_POOL_ID}
+    SES_VERIFIED_EMAIL: ${env:SES_VERIFIED_EMAIL}
+    AWS_SMTP_HOST: ${env:AWS_SMTP_HOST}
+    AWS_SMTP_PORT: ${env:AWS_SMTP_PORT}
+    AWS_SMTP_USER: ${env:AWS_SMTP_USER}
+    AWS_SMTP_PASS: ${env:AWS_SMTP_PASS}
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+    JWT_EXPIRE_MINUTES: ${env:JWT_EXPIRE_MINUTES}
+    JWT_ALGORITHM: ${env:JWT_ALGORITHM}
+    TIME_ZONE: ${env:TIME_ZONE}
+
+functions:
+  app:
+    handler: app/handler.handler  # Tu archivo handler.py con Mangum
+    events:
+      - httpApi: '*'               # API Gateway HTTP API, cualquier ruta
+    layers:
+      - !Ref PythonRequirementsLambdaLayer
+
+package:
+  exclude:
+    - .env
+    - .serverless/**
+    - node_modules/**
+    - env/**
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+  - serverless-offline
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer:
+      name: fastapi-serverless-lambda
+      compatibility: python3.12
+    slim: false              # Evita eliminar metadata de paquetes (ej: email-validator)
+    invalidateCaches: true   # Fuerza regeneración de layer
