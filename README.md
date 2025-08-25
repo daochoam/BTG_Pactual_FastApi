@@ -194,25 +194,25 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 
 | Método | Endpoint           | Descripción                | Body/Headers                       |
 |--------|--------------------|----------------------------|------------------------------------|
-| POST   | `/auth/register`   | Registro de usuario        | Body: `RegisterUserModel`          |
-| POST   | `/auth/login`      | Inicio de sesión           | Body: `LoginUserModel`             |
-| POST   | `/auth/logout`     | Cierre de sesión           | Headers: `Authorization`, `X-Refresh-Token` |
+| POST   | `/api/auth/register`   | Registro de usuario        | Body: `RegisterUserModel`          |
+| POST   | `/api/auth/login`      | Inicio de sesión           | Body: `LoginUserModel`             |
+| POST   | `/api/auth/logout`     | Cierre de sesión           | Headers: `Authorization`, `X-Refresh-Token` |
 
 **Modelos:**
 - `RegisterUserModel`: Datos requeridos para registrar un usuario.
 - `LoginUserModel`: Credenciales para iniciar sesión.
 
 **Notas:**
-- El endpoint `/auth/logout` requiere los headers `Authorization` y `X-Refresh-Token`.
+- El endpoint `/api/auth/logout` requiere los headers `Authorization` y `X-Refresh-Token`.
 - Todos los endpoints responden en formato JSON.
 
 ### Rutas de Categorías
 
 | Método | Endpoint             | Descripción                        | Body/Headers                       |
 |--------|----------------------|------------------------------------|------------------------------------|
-| POST   | `/category/`         | Crear una categoría                | Body: `CreateCategoryModel`, Headers: `Authorization` (admin) |
-| GET    | `/category/`         | Obtener todas las categorías       | Ninguno                            |
-| GET    | `/category/{id}`     | Obtener una categoría por ID       | Path: `id`                         |
+| POST   | `/api/category`         | Crear una categoría                | Body: `CreateCategoryModel`, Headers: `Authorization` (admin) |
+| GET    | `/api/category`         | Obtener todas las categorías       | Ninguno                            |
+| GET    | `/api/category/{id}`     | Obtener una categoría por ID       | Path: `id`                         |
 
 **Modelos:**
 - `CreateCategoryModel`: Datos requeridos para crear una categoría.
@@ -223,10 +223,10 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 
 | Método | Endpoint                    | Descripción                        | Body/Headers                       |
 |--------|-----------------------------|------------------------------------|------------------------------------|
-| POST   | `/bank-funds/`              | Crear un fondo bancario            | Body: `CreateBankFundsModel`, Headers: `Authorization` (admin) |
-| GET    | `/bank-funds/`              | Obtener todos los fondos bancarios | Ninguno                            |
-| GET    | `/bank-funds/{bank_funds_id}` | Obtener fondo bancario por ID      | Path: `bank_funds_id`              |
-| PUT    | `/bank-funds/{bank_funds_id}` | Actualizar fondo bancario          | Path: `bank_funds_id`, Body: `UpdateBankFundsModel`, Headers: `Authorization` (admin) |
+| POST   | `/api/bank-funds`              | Crear un fondo bancario            | Body: `CreateBankFundsModel`, Headers: `Authorization` (admin) |
+| GET    | `/api/bank-funds`              | Obtener todos los fondos bancarios | Ninguno                            |
+| GET    | `/api/bank-funds/{bank_funds_id}` | Obtener fondo bancario por ID      | Path: `bank_funds_id`              |
+| PUT    | `/api/bank-funds/{bank_funds_id}` | Actualizar fondo bancario          | Path: `bank_funds_id`, Body: `UpdateBankFundsModel`, Headers: `Authorization` (admin) |
 
 **Modelos:**
 - `CreateBankFundsModel`: Datos requeridos para crear un fondo bancario.
@@ -237,25 +237,35 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 
 | Método | Endpoint                               | Descripción                                         | Body/Headers                       |
 |--------|----------------------------------------|-----------------------------------------------------|------------------------------------|
-| POST   | `/user-bank-funds/{bank_funds_id}`     | Asociar un fondo bancario a un usuario              | Path: `bank_funds_id`, Headers: `Authorization` |
-| GET    | `/user-bank-funds/`                    | Obtener todos los fondos bancarios de un usuario     | Headers: `Authorization`           |
-| GET    | `/user-bank-funds/{id}`                | Obtener un fondo bancario de usuario por ID          | Path: `id`, Headers: `Authorization` |
-| DELETE | `/user-bank-funds/{user_bank_funds_id}`| Eliminar un fondo bancario asociado a un usuario     | Path: `user_bank_funds_id`, Headers: `Authorization` |
+| POST   | `/api/user-bank-funds/{bank_funds_id}`     | Asociar un fondo bancario a un usuario              | Path: `bank_funds_id`, Headers: `Authorization` |
+| GET    | `/api/user-bank-funds`                    | Obtener todos los fondos bancarios de un usuario     | Headers: `Authorization`           |
+| GET    | `/api/user-bank-funds/{id}`                | Obtener un fondo bancario de usuario por ID          | Path: `id`, Headers: `Authorization` |
+| DELETE | `/api/user-bank-funds/{user_bank_funds_id}`| Eliminar un fondo bancario asociado a un usuario     | Path: `user_bank_funds_id`, Headers: `Authorization` |
 
 ### Rutas de Auditoría de Fondos Bancarios de Usuario
 
 | Método | Endpoint                                         | Descripción                                              | Body/Headers             |
 |--------|--------------------------------------------------|----------------------------------------------------------|--------------------------|
-| GET    | `/user-bank-funds-audit/`                        | Obtener todos los registros de auditoría de fondos bancarios por usuario | Headers: `Authorization` |
-| GET    | `/user-bank-funds-audit/{user_bank_funds_audit_id}` | Obtener un registro de auditoría por ID                  | Path: `user_bank_funds_audit_id`, Headers: `Authorization` |
+| GET    | `/api/user-bank-funds-audit`                        | Obtener todos los registros de auditoría de fondos bancarios por usuario | Headers: `Authorization` |
+| GET    | `/api/user-bank-funds-audit/{user_bank_funds_audit_id}` | Obtener un registro de auditoría por ID                  | Path: `user_bank_funds_audit_id`, Headers: `Authorization` |
 
 ### Rutas de Usuarios
 
 | Método | Endpoint         | Descripción                                                                 | Body/Headers                       |
 |--------|------------------|-----------------------------------------------------------------------------|------------------------------------|
-| GET    | `/users/`        | Obtener todos los usuarios (solo ADMIN) o solo el usuario autenticado        | Headers: `Authorization`           |
+| GET    | `/api/users`        | Obtener todos los usuarios (solo ADMIN) o solo el usuario autenticado        | Headers: `Authorization`           |
 
 **Notas:**
-- El endpoint `/users` devuelve todos los usuarios si el rol es ADMIN, de lo contrario solo la información del usuario autenticado.
+- El endpoint `/api/users` devuelve todos los usuarios si el rol es ADMIN, de lo contrario solo la información del usuario autenticado.
 - Requiere autenticación mediante el header `Authorization`.
 
+### Ruta de Documentación
+
+| Método | Endpoint    | Descripción                       | Body/Headers |
+|--------|-------------|-----------------------------------|--------------|
+| GET    | `/swagger`  | Acceso a la documentación Swagger | Ninguno      |
+
+**Notas:**
+- La documentación interactiva de la API está disponible en `/swagger`.
+- Permite explorar y probar los endpoints de manera visual.
+- No requiere autenticación para acceder.
