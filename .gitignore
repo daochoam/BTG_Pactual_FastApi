@@ -45,3 +45,5 @@ nosetests.xml
 coverage.xml
 *.mocha
 *.pytest_cache/
+
+.serverless/
