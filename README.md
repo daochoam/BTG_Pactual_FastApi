@@ -99,7 +99,7 @@ def lambda_handler(event, context):
 
 ## Notas
 
-- Asegúrate de tener configurados los servicios de AWS (DynamoDB, Cognito, SES, SMTP).
+- configura los servicios de AWS necesarios (DynamoDB, Cognito, SES, SMTP).
 - No compartas tus credenciales en repositorios públicos.
 - Modifica las variables según tu entorno y necesidades.
 
@@ -184,13 +184,13 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 | `created_at`| Fecha de creación del registro de auditoría         |
 
 
-# Endpoints BTG_PACTUAL
+# Rutas del proyecto
 
 - Todos los endpoints requieren autenticación de usuario.
 - El endpoint de creación (`/category` y `/bank-funds`) requieren autenticación de administrador.
 - Los registros de auditoría permiten consultar el historial de acciones sobre fondos bancarios asociados a usuarios.
 
-### Endpoints de Autenticación
+### Rutas de Autenticación
 
 | Método | Endpoint           | Descripción                | Body/Headers                       |
 |--------|--------------------|----------------------------|------------------------------------|
@@ -206,7 +206,7 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 - El endpoint `/auth/logout` requiere los headers `Authorization` y `X-Refresh-Token`.
 - Todos los endpoints responden en formato JSON.
 
-### Endpoints de Categorías
+### Rutas de Categorías
 
 | Método | Endpoint             | Descripción                        | Body/Headers                       |
 |--------|----------------------|------------------------------------|------------------------------------|
@@ -219,7 +219,7 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 - `UpdateCategoryModel`: Datos para actualizar una categoría.
 
 
-### Endpoints de Fondos Bancarios
+### Rutas de Fondos Bancarios
 
 | Método | Endpoint                    | Descripción                        | Body/Headers                       |
 |--------|-----------------------------|------------------------------------|------------------------------------|
@@ -233,7 +233,7 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 - `UpdateBankFundsModel`: Datos para actualizar un fondo bancario.
 
 
-### Endpoints de Fondos Bancarios de Usuario
+### Rutas de Fondos Bancarios de Usuario
 
 | Método | Endpoint                               | Descripción                                         | Body/Headers                       |
 |--------|----------------------------------------|-----------------------------------------------------|------------------------------------|
@@ -242,14 +242,14 @@ El esquema `UserBankFundsAuditSchema` extiende el esquema de fondos bancarios de
 | GET    | `/user-bank-funds/{id}`                | Obtener un fondo bancario de usuario por ID          | Path: `id`, Headers: `Authorization` |
 | DELETE | `/user-bank-funds/{user_bank_funds_id}`| Eliminar un fondo bancario asociado a un usuario     | Path: `user_bank_funds_id`, Headers: `Authorization` |
 
-### Endpoints de Auditoría de Fondos Bancarios de Usuario
+### Rutas de Auditoría de Fondos Bancarios de Usuario
 
 | Método | Endpoint                                         | Descripción                                              | Body/Headers             |
 |--------|--------------------------------------------------|----------------------------------------------------------|--------------------------|
 | GET    | `/user-bank-funds-audit/`                        | Obtener todos los registros de auditoría de fondos bancarios por usuario | Headers: `Authorization` |
 | GET    | `/user-bank-funds-audit/{user_bank_funds_audit_id}` | Obtener un registro de auditoría por ID                  | Path: `user_bank_funds_audit_id`, Headers: `Authorization` |
 
-### Endpoints de Usuarios
+### Rutas de Usuarios
 
 | Método | Endpoint         | Descripción                                                                 | Body/Headers                       |
 |--------|------------------|-----------------------------------------------------------------------------|------------------------------------|
