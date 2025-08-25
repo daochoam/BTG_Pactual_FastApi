@@ -1,19 +1,26 @@
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from app.config import Config, cognito_client
 from app.documents.auth_models import LoginUserModel, RegisterUserModel
 from app.utils.secret_hash import get_secret_hash
+import logging
 
 import app.schemas.users as users
 
 
-def register_user(data: RegisterUserModel):
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-    if users.users_db.scan(
+def register_user(data: RegisterUserModel):
+    # Verifica si el NIT o Email ya existen
+    existing = users.users_db.scan(
         FilterExpression="nit = :n OR email = :e",
         ExpressionAttributeValues={":n": data.nit, ":e": data.email}
-    ).get("Items"):
-        raise HTTPException(status_code=400, detail="NIT or Email already registered")
+    ).get("Items")
+
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="NIT or Email already registered")
 
     try:
         response = cognito_client.sign_up(
@@ -32,8 +39,10 @@ def register_user(data: RegisterUserModel):
     except cognito_client.exceptions.UsernameExistsException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error("Register user failed", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
 
+    # Crear usuario local y serializar
     user = users.UserSchema(
         nit=data.nit,
         name=data.name,
@@ -41,18 +50,25 @@ def register_user(data: RegisterUserModel):
         email=data.email,
         phone=data.phone,
         role=data.role or users.UserSchema.RoleEnum.USER,
-        id=response["UserSub"]
+        id=response.get("UserSub")
     )
-    users.users_db.put_item(Item=user.to_dict())
+    users.users_db.put_item(Item=jsonable_encoder(user))
 
-    return {
-        "detail": "User registered successfully",
-        "items": {"user_id": response["UserSub"]},
-        "status": status.HTTP_201_CREATED
-    }
+    return JSONResponse(
+        content=jsonable_encoder({
+            "detail": "User registered successfully",
+            "items": {"user_id": response.get("UserSub")}
+        }),
+        status_code=status.HTTP_201_CREATED
+    )
+
 
 def login_user(data: LoginUserModel):
-    user_items = users.users_db.scan(FilterExpression="email = :e",ExpressionAttributeValues={":e": data.email}).get("Items")
+    user_items = users.users_db.scan(
+        FilterExpression="email = :e",
+        ExpressionAttributeValues={":e": data.email}
+    ).get("Items")
+
     if not user_items:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Email not registered")
 
@@ -71,11 +87,15 @@ def login_user(data: LoginUserModel):
             },
         )
 
-        access_token = response["AuthenticationResult"]["AccessToken"]
-        refresh_token = response["AuthenticationResult"]["RefreshToken"]
+        auth_result = response.get("AuthenticationResult", {})
+        access_token = auth_result.get("AccessToken")
+        refresh_token = auth_result.get("RefreshToken")
+
+        if not access_token or not refresh_token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
         user_info = cognito_client.get_user(AccessToken=access_token)
-        attributes = {attr["Name"]: attr["Value"] for attr in user_info["UserAttributes"]}
+        attributes = {attr["Name"]: attr["Value"] for attr in user_info.get("UserAttributes", [])}
 
         body = {
             "detail": "Login successful",
@@ -89,14 +109,17 @@ def login_user(data: LoginUserModel):
             "Authorization": f"Bearer {access_token}",
             "X-Refresh-Token": refresh_token
         }
-        return JSONResponse(content=body, headers=headers, status_code=status.HTTP_200_OK)
+
+        return JSONResponse(content=jsonable_encoder(body), headers=headers, status_code=status.HTTP_200_OK)
 
     except cognito_client.exceptions.NotAuthorizedException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
     except cognito_client.exceptions.UserNotConfirmedException:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not verified")
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logger.error("Login failed", exc_info=True)
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
+
 
 def logout_user(authorization: str, refresh_token: str):
     if not authorization or not authorization.startswith("Bearer "):
@@ -112,16 +135,17 @@ def logout_user(authorization: str, refresh_token: str):
             ClientId=Config.AWS_COGNITO_CLIENT_ID,
             ClientSecret=Config.AWS_COGNITO_CLIENT_SECRET
         )
-        
-        body = {
-            "detail": "Logout successful",
-            "data": {},
-        }
-        
-        return JSONResponse(content=body, status_code=status.HTTP_200_OK)
     except Exception as e:
+        logger.warning("Token already revoked or invalid: %s", e)
+        # Intenta cerrar sesión globalmente si revoke falla
         try:
             cognito_client.global_sign_out(AccessToken=access_token)
-        except Exception:
-            pass
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        except Exception as e2:
+            logger.warning("global_sign_out also failed: %s", e2)
+
+    body = {
+        "detail": "Logout successful",
+        "data": {}
+    }
+
+    return JSONResponse(content=jsonable_encoder(body), status_code=status.HTTP_200_OK)

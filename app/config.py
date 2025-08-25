@@ -22,7 +22,6 @@ class Config:
 
     AWS_COGNITO_CLIENT_ID = os.getenv("AWS_COGNITO_CLIENT_ID", "<tu-client-id>")
     AWS_COGNITO_CLIENT_SECRET = os.getenv("AWS_COGNITO_CLIENT_SECRET", "<tu-client-secret>")
-    AWS_COGNITO_REDIRECT_URI = os.getenv("AWS_COGNITO_REDIRECT_URI", "http://localhost:5000/callback")
     AWS_COGNITO_DOMAIN = os.getenv("AWS_COGNITO_DOMAIN", "<tu-dominio-cognito>")
     AWS_COGNITO_USER_POOL_ID = os.getenv("AWS_COGNITO_USER_POOL_ID", "<tu-user-pool-id>")
 
@@ -40,11 +39,12 @@ class Config:
     TIME_ZONE = ZoneInfo(os.getenv("TIME_ZONE", "UTC"))
 
 boto3_kwargs = {"region_name": Config.AWS_REGION}
-if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY:
+if Config.ENVIRONMENT_MODE == "development":
     boto3_kwargs.update({
         "aws_access_key_id": Config.AWS_ACCESS_KEY_ID,
         "aws_secret_access_key": Config.AWS_SECRET_ACCESS_KEY
     })
+
 
 # Recurso para operaciones de datos (put_item, get_item, etc.)
 dynamodb = boto3.resource("dynamodb", **boto3_kwargs)
